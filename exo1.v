@@ -50,7 +50,7 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
 | ex_e   : forall L {A:Type} (P:A -> form) f, (forall t, deriv (L⋯P t) f) -> deriv L f 
 | all_i  : forall L {A:Type} (P:A -> form), (forall t, deriv L (P t)) -> deriv L (All P)
 | all_e  : forall L {A:Type} (P:A -> form), deriv L (All P) -> forall t, deriv L (P t).
-Notation "L ⊢ f" := (deriv L f) (at level 5).
+Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
 (* Weakening lemma *)
@@ -103,4 +103,55 @@ Proof.
   intros; apply (deriv_weakening_strong L); assumption.
 Defined.
 
+(*The usual form of the weakening inference rule*)
+Lemma wkn (L : form -> Prop) g f :
+  L ⊢ f -> (L⋯g) ⊢ f.
+Proof.
+  intro; apply (deriv_weakening L (L⋯_)).
+  - assumption.
+  - intros; left; assumption.
+Defined.
+
+
+(*Substitution*)
+
+Lemma deriv_substitution_strong (L : form -> Prop) f :
+  deriv L f ->
+  forall L', (forall f, L f -> deriv L' f) ->
+        deriv L' f.
+Proof.
+  intros H; induction H; intros.
+  - apply H0, H.
+  - apply Tr_i.
+  - apply Fa_e, IHderiv, H0. 
+  - apply imp_i, IHderiv.
+    intros. case H1.
+    + intro; apply wkn.
+      apply H0, H2. 
+    + intro; apply ax; right; assumption.
+  - apply (imp_e _ f g). apply IHderiv1, H1.
+    apply IHderiv2, H1.
+  - apply and_i.
+    + apply IHderiv1, H1.
+    + apply IHderiv2, H1.
+  - apply (and_e1 _ _ g), IHderiv, H0.
+  - apply (and_e2 _ f _), IHderiv, H0.
+  - apply or_i1, IHderiv, H0.
+  - apply or_i2, IHderiv, H0.
+  - apply (or_e _ f g).
+    + apply IHderiv1, H2.
+    + apply IHderiv2; intros; case H3.
+      * intro; apply wkn, H2, H4.
+      * intro; apply ax; right; assumption.
+    + apply IHderiv3. intros; case H3.
+      * intro; apply wkn, H2, H4. 
+      * intro; apply ax; right; assumption.
+  - apply (ex_i _ _ t), IHderiv, H0.
+  - apply (ex_e _ P f); intro t1; apply (H0 t1).
+    intros; case H2.
+    + intro; apply wkn, H1; assumption.
+    + intro. apply ax; right; assumption.
+  - apply all_i. intro; apply H0, H1.
+  - apply all_e, IHderiv, H0.
+Defined.
 
