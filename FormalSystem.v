@@ -1,12 +1,11 @@
-
 Set Printing Universes.
 
 (* The inductive type of formulae. Note that the definition is 
-  universe-polymorphic. If All or Ex quantifies over a type in a universe 
-  the resulting formula is in a strictly higher universe. In particular,
+  universe-polymorphic. If All or Ex quantifies over a type in a universe, 
+  then the resulting form is in a strictly higher universe. In particular,
   they cannot quantify over form. *)
 Inductive form :=
-| Tr   : form (* true/top *)
+| Tr   : form (* true/⊤ *)
 | Fa   : form (*absurd*)
 | And  : form -> form -> form (*conjunction*)
 | Or   : form -> form -> form (*disjunction*)
@@ -24,36 +23,58 @@ Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
 Notation "L ⋯ f" := (L_ext L f) (at level 99).
 
 
-(* One might be tempted by the following bad definition, of "removing a 
-   hypothesis from a context"
+(* One might be tempted to make the following definition of "removing a 
+   hypothesis from a context", i.e. of discarding *all* occurrences of the formula
+   from the context. This is unwise for the usual reasons --- 
 
 Definition L_rm : (form -> Prop) -> form -> form -> Prop :=
   fun L A B => and (L B) (~ B = A).  *)
 
 
 
-(* The inductive family of derivations, indexed over contexts and formulae *)
+(* The inductive family of derivations, indexed over contexts and formulae, and valued in Prop *)
 Inductive deriv : (form -> Prop) -> form -> Prop :=
-| ax     : forall (L:_ -> Prop) f, L f -> deriv L f
+| ax     : forall (L:_ -> Prop) f,
+             L f -> deriv L f
 | Tr_i   : forall L, deriv L Tr
 | Fa_e   : forall L f, deriv L Fa -> deriv L f
-| imp_i  : forall (L:_ -> Prop) f g, deriv (L⋯f) g -> deriv L (Impl f g)
-| imp_e  : forall L f g, deriv L (Impl f g) -> deriv L f -> deriv L g
-| and_i  : forall L f g, deriv L f -> deriv L g -> deriv L (And f g)
-| and_e1 : forall L f g, deriv L (And f g) -> deriv L f
-| and_e2 : forall L f g, deriv L (And f g) -> deriv L g
-| or_i1  : forall L f g, deriv L f -> deriv L (Or f g)
-| or_i2  : forall L f g, deriv L g -> deriv L (Or f g)
-| or_e   : forall L f g h, deriv L (Or f g) -> deriv (L⋯f) h -> deriv (L⋯g) h ->
-                      deriv L h
-| ex_i   : forall L {A:Type} (P:A -> form) t, deriv L (P t) -> deriv L (Ex P)
-| ex_e   : forall L {A:Type} (P:A -> form) f, (forall t, deriv (L⋯P t) f) -> deriv L f 
-| all_i  : forall L {A:Type} (P:A -> form), (forall t, deriv L (P t)) -> deriv L (All P)
-| all_e  : forall L {A:Type} (P:A -> form), deriv L (All P) -> forall t, deriv L (P t).
+| imp_i  : forall L f g,
+             deriv (L⋯f) g -> deriv L (Impl f g)
+| imp_e  : forall L f g,
+             deriv L (Impl f g) -> deriv L f -> deriv L g
+| and_i  : forall L f g,
+             deriv L f -> deriv L g -> deriv L (And f g)
+| and_e1 : forall L f g,
+             deriv L (And f g) -> deriv L f
+| and_e2 : forall L f g,
+             deriv L (And f g) -> deriv L g
+| or_i1  : forall L f g,
+             deriv L f -> deriv L (Or f g)
+| or_i2  : forall L f g,
+             deriv L g -> deriv L (Or f g)
+| or_e   : forall L f g h,
+             deriv L (Or f g) -> deriv (L⋯f) h -> deriv (L⋯g) h -> deriv L h
+| ex_i   : forall L {A:Type} (P:A -> form) t,
+             deriv L (P t) -> deriv L (Ex P)
+| ex_e   : forall L {A:Type} (P:A -> form) f,
+             (forall t, deriv (L⋯P t) f) -> deriv L f (* Note that the side condition that this 
+                                                 rule requires, namely that t be free neither 
+                                                 in L nor in f is guaranteed by the fact that L
+                                                 and f are bound above t, thus t cannot be free 
+                                                 in them *)
+                                                                       
+| all_i  : forall L {A:Type} (P:A -> form),
+             (forall t, deriv L (P t)) -> deriv L (All P) (*same side condition for L*)
+| all_e  : forall L {A:Type} (P:A -> form),
+             deriv L (All P) -> forall t, deriv L (P t).
 Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
-(* Weakening lemma *)
+(* ---------------------------------------------  *)
+(** * The derivable inference rules *)
+
+
+(* The Weakening lemma *)
 Lemma deriv_weakening_strong (L : form -> Prop) f :
   L ⊢ f ->
   forall L':_-> Prop, (forall f, L f -> L' f) ->
@@ -95,6 +116,9 @@ Proof.
   - apply all_e, IHderiv, H0.
 Defined.
 
+
+(*A logically equivalent statement, but where the induction tactic does not 
+produce strong enough hypotheses for a direct proof*)
 Lemma deriv_weakening (L L' : form -> Prop) f :
   L ⊢ f ->
   (forall f, L f -> L' f) ->
@@ -113,8 +137,9 @@ Proof.
 Defined.
 
 
-(*Substitution*)
 
+
+(*Substitution*)
 Lemma deriv_substitution_strong (L : form -> Prop) f :
   deriv L f ->
   forall L', (forall f, L f -> deriv L' f) ->
@@ -153,5 +178,16 @@ Proof.
     + intro. apply ax; right; assumption.
   - apply all_i. intro; apply H0, H1.
   - apply all_e, IHderiv, H0.
+Defined.
+
+
+
+Lemma deriv_substitution (L L' : form -> Prop) f :
+  deriv L f ->
+  (forall f, L f -> deriv L' f) ->
+  deriv L' f.
+Proof.
+  intros.
+  apply (deriv_substitution_strong L); assumption.
 Defined.
 
