@@ -1,20 +1,17 @@
 Set Printing Universes.
 
-(* The inductive type of formulae. Note that the definition is 
-  universe-polymorphic. If All or Ex quantifies over a type in a universe, 
-  then the resulting form is in a strictly higher universe. In particular,
-  they cannot quantify over form. *)
+
+(** The inductive type of formulae. Note that if All or Ex quantifies over a type in a universe, then the resulting form is in a strictly higher universe. In particular, neither can quantify over *all* terms of type form. Note also that the definition is universe-polymorphic, thus the All and Ex constructors of a form at a higher level can quantify over a form at a lower level *)
+
 Inductive form :=
-| Tr   : form (* true/⊤ *)
-| Fa   : form (*absurd*)
-| And  : form -> form -> form (*conjunction*)
-| Or   : form -> form -> form (*disjunction*)
+| Tr : form (* true/⊤ *)
+| Fa : form (*absurd*)
+| And : form -> form -> form (*conjunction*)
+| Or : form -> form -> form (*disjunction*)
 | Impl : form -> form -> form (*implication*)
-| All  : forall {A : Type}, (A -> form) -> form (*Universal quantifier*)
-| Ex   : forall {A : Type}, (A -> form) -> form (*Existential quantifier*)
+| All : forall {A : Type}, (A -> form) -> form (*Universal quantifier*)
+| Ex : forall {A : Type}, (A -> form) -> form (*Existential quantifier*)
 | Atom : Prop -> form. (*Atomic propositions*)
-
-
 
 
 (* Context extension *)
@@ -23,16 +20,14 @@ Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
 Notation "L ⋯ f" := (L_ext L f) (at level 99).
 
 
-(* One might be tempted to make the following definition of "removing a 
-   hypothesis from a context", i.e. of discarding *all* occurrences of the formula
-   from the context. This is unwise for the usual reasons --- 
+(** One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---
 
 Definition L_rm : (form -> Prop) -> form -> form -> Prop :=
   fun L A B => and (L B) (~ B = A).  *)
 
 
 
-(* The inductive family of derivations, indexed over contexts and formulae, and valued in Prop *)
+(** The inductive family of derivations, indexed over contexts and formulae, and valued in Prop *)
 Inductive deriv : (form -> Prop) -> form -> Prop :=
 | ax     : forall (L:_ -> Prop) f,
              L f -> deriv L f
@@ -56,15 +51,12 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
              deriv L (Or f g) -> deriv (L⋯f) h -> deriv (L⋯g) h -> deriv L h
 | ex_i   : forall L {A:Type} (P:A -> form) t,
              deriv L (P t) -> deriv L (Ex P)
+(** Note that the side condition that the following rule requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — meta-theoretically — above t, thus t cannot be free in them *)
 | ex_e   : forall L {A:Type} (P:A -> form) f,
-             (forall t, deriv (L⋯P t) f) -> deriv L f (* Note that the side condition that this 
-                                                 rule requires, namely that t be free neither 
-                                                 in L nor in f is guaranteed by the fact that L
-                                                 and f are bound above t, thus t cannot be free 
-                                                 in them *)
-                                                                       
+             (forall t, deriv (L⋯P t) f) -> deriv L f
+(*same side condition for L in the following rule*)
 | all_i  : forall L {A:Type} (P:A -> form),
-             (forall t, deriv L (P t)) -> deriv L (All P) (*same side condition for L*)
+             (forall t, deriv L (P t)) -> deriv L (All P)
 | all_e  : forall L {A:Type} (P:A -> form),
              deriv L (All P) -> forall t, deriv L (P t).
 Notation "L ⊢ f" := (deriv L f) (at level 99).
@@ -75,18 +67,14 @@ Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
 (* The Weakening lemma *)
-Lemma deriv_weakening_strong (L : form -> Prop) f :
-  L ⊢ f ->
-  forall L':_-> Prop, (forall f, L f -> L' f) ->
-  L' ⊢ f.
+Lemma deriv_weakening_strong (L : form -> Prop) f {H:L ⊢ f}
+: forall L':_-> Prop, (forall f, L f -> L' f) -> L' ⊢ f.
 Proof.
-  intro H.
   induction H; intros.
   - apply ax, H0, H.
   - apply Tr_i.
   - apply Fa_e, IHderiv, H0. 
-  - apply imp_i, IHderiv.
-    intros.
+  - apply imp_i, IHderiv; intros.
     case H1.
     + intro; left; apply H0, H2.
     + intro; right; assumption.
