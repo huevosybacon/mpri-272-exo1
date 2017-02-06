@@ -17,7 +17,7 @@ Inductive form :=
 (* Context extension *)
 Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
   fun L f g => or (L g) (g = f).
-Notation "L ⋯ f" := (L_ext L f) (at level 99).
+cbNotation "L ⋯ f" := (L_ext L f) (at level 99).
 
 
 (** One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---

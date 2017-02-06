@@ -116,5 +116,30 @@ Proof.
   - apply (imp_e _ (nnt f)); assumption.
   - apply (and_e1 _ _ (nnt g)); assumption.
   - apply (and_e2 _ (nnt f)); assumption.
-  - apply (or_e _ (nnt f) (nnt g)).
-    + apply nnt_dne.
+  - apply nnt_dne, imp_i.
+    apply (imp_e _ (! Or (nnt f) (nnt g))).
+    apply wkn; assumption. apply imp_i.
+    apply (or_e _ (nnt f) (nnt g)).
+    + apply ax. right. reflexivity.
+    + apply (imp_e _ (nnt h)).
+      * apply ax. left. left. right. reflexivity.
+      * apply (deriv_weakening (nnt_ctx L⋯(nnt f))).
+        apply nnt_ctx_ext. assumption.
+        intros f0 H'. case H'.
+        intros. left. left. left. assumption.
+        intros. right. assumption.
+    + apply (imp_e _ (nnt h)).
+      * apply ax. left. left. right. reflexivity.
+      * apply (deriv_weakening (nnt_ctx L⋯(nnt g))).
+        apply nnt_ctx_ext. assumption.
+        intros f0 H'. case H'.
+        intros. left. left. left. assumption.
+        intros. right. assumption.
+  - apply (ex_i _ _ t). assumption.
+  - apply (ex_e _ (fun t => nnt (P t)) _).
+    intro. apply nnt_ctx_ext, H0.
+  - apply (all_e _ (fun t => nnt (P t))).
+    assumption.
+Qed.
+
+

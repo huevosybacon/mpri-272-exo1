@@ -9,7 +9,7 @@
 #     make clean
 
 # Modules to be included in the main build:
-MODULES-MAIN := FormalSystem 
+MODULES-MAIN := FormalSystem Translation
 MODULES-OTHER := 
 
 # Files that are largely broken for now and will not be built. \
