@@ -137,7 +137,8 @@ Proof.
         intros. right. assumption.
   - apply (ex_i _ _ t). assumption.
   - apply (ex_e _ (fun t => nnt (P t)) _).
-    intro. apply nnt_ctx_ext, H0.
+    + intro. apply nnt_ctx_ext, H0.
+    + apply (ex_i.
   - apply (all_e _ (fun t => nnt (P t))).
     assumption.
 Qed.

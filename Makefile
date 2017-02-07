@@ -9,7 +9,8 @@
 #     make clean
 
 # Modules to be included in the main build:
-MODULES-MAIN := FormalSystem Translation Classical
+MODULES-MAIN := FormalSystem Translation Classical \
+EqualityArithmetic
 MODULES-OTHER := 
 
 # Files that are largely broken for now and will not be built. \

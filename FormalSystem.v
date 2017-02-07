@@ -53,7 +53,7 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
              deriv L (P t) -> deriv L (Ex P)
 (** Note that the side condition that the following rule requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — meta-theoretically — above t, thus t cannot be free in them *)
 | ex_e   : forall L {A:Type} (P:A -> form) f,
-             (forall t, deriv (L⋯P t) f) -> deriv L f
+             (forall t, deriv (L⋯P t) f) -> (deriv L (Ex P)) -> deriv L f
 (*same side condition for L in the following rule*)
 | all_i  : forall L {A:Type} (P:A -> form),
              (forall t, deriv L (P t)) -> deriv L (All P)
@@ -96,10 +96,11 @@ Proof.
       * intro; left; apply H2; assumption.
       * intro; right; assumption.
   - apply (ex_i _ _ t), IHderiv, H0.
-  - apply (ex_e _ P f); intro t1; apply (H0 t1).
-    intros; case H2.
-    + intro; left; apply H1; assumption.
+  - apply (ex_e _ P f). intro t1. apply (H0 t1).
+    intros. case H3.
+    + intro; left; apply H2; assumption.
     + intro; right; assumption.
+    + apply IHderiv. assumption.
   - apply all_i. intro; apply H0, H1.
   - apply all_e, IHderiv, H0.
 Defined.
@@ -160,10 +161,11 @@ Proof.
       * intro; apply wkn, H2, H4. 
       * intro; apply ax; right; assumption.
   - apply (ex_i _ _ t), IHderiv, H0.
-  - apply (ex_e _ P f); intro t1; apply (H0 t1).
-    intros; case H2.
-    + intro; apply wkn, H1; assumption.
+  - apply (ex_e _ P f). intro t1; apply (H0 t1).
+    intros; case H3.
+    + intro; apply wkn, H2; assumption.
     + intro. apply ax; right; assumption.
+    + apply IHderiv. assumption.
   - apply all_i. intro; apply H0, H1.
   - apply all_e, IHderiv, H0.
 Defined.
