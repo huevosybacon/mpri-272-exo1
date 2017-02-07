@@ -9,8 +9,17 @@ Inductive classic : form -> Prop :=
   Cem P : classic (Or P (!P)).
 
 
+
+
 Definition U_theory L L' : form -> Prop :=
   fun f => L f \/ L' f.
+
+Notation "L ⋃ T" := (U_theory L T)
+                      (at level 99).
+
+
+
+
 
 Definition deriv_classic L f : Prop :=
   U_theory L classic ⊢ f.
