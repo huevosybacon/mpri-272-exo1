@@ -1,10 +1,8 @@
 Set Printing Universes.
 
-
-(** The inductive type of formulae. Note that if All or Ex quantifies over a type in a universe, then the resulting form is in a strictly higher universe. In particular, neither can quantify over *all* terms of type form. Note also that the definition is universe-polymorphic, thus the All and Ex constructors of a form at a higher level can quantify over a form at a lower level *)
-
+(*The inductive type of formulae. Note that if All or Ex quantifies over a type in a universe, then the resulting form is in a strictly higher universe. In particular, neither can quantify over *all* terms of type form. Note also that the definition is universe-polymorphic, thus the All and Ex constructors of a form at a higher level can quantify over a form at a lower level*)
 Inductive form :=
-| Tr : form (* true/⊤ *)
+| Tr : form (*true/⊤*)
 | Fa : form (*absurd*)
 | And : form -> form -> form (*conjunction*)
 | Or : form -> form -> form (*disjunction*)
@@ -14,20 +12,31 @@ Inductive form :=
 | Atom : Prop -> form. (*Atomic propositions*)
 
 
-(* Context extension *)
+(*---------------------------------*)
+(*Contexts --- are represented by terms L:form → Prop*)
+
+
+(*Empty context*)
+Definition Ø (f:form) := False.
+
+
+(*Context extension*)
 Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
-  fun L f g => or (L g) (g = f).
+  fun L f g => (L g) \/ (g = f).
 Notation "L ⋯ f" := (L_ext L f) (at level 99).
 
 
-(** One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---
+(*One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---
 
 Definition L_rm : (form -> Prop) -> form -> form -> Prop :=
-  fun L A B => and (L B) (~ B = A).  *)
+  fun L A B => and (L B) (~ B = A).*)
 
 
+(*--------------------------------*)
+(*Derivations/Judgements*)
 
-(** The inductive family of derivations, indexed over contexts and formulae, and valued in Prop *)
+(*Question 1.1.1*)
+(*The inductive family of derivations, indexed over contexts and formulae, and valued in Prop. We choose to place ourselves in Natural Deduction.*)
 Inductive deriv : (form -> Prop) -> form -> Prop :=
 | ax     : forall (L:_ -> Prop) f,
              L f -> deriv L f
@@ -51,22 +60,25 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
              deriv L (Or f g) -> deriv (L⋯f) h -> deriv (L⋯g) h -> deriv L h
 | ex_i   : forall L {A:Type} (P:A -> form) t,
              deriv L (P t) -> deriv L (Ex P)
-(** Note that the side condition that the following rule requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — meta-theoretically — above t, thus t cannot be free in them *)
 | ex_e   : forall L {A:Type} (P:A -> form) f,
              (forall t, deriv (L⋯P t) f) -> (deriv L (Ex P)) -> deriv L f
-(*same side condition for L in the following rule*)
+(*Note that the side condition that the rule above requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — in the Coq lambda-term — above t, thus t cannot be free in them*)
+
 | all_i  : forall L {A:Type} (P:A -> form),
              (forall t, deriv L (P t)) -> deriv L (All P)
+(*same remark for the side condition in the rule above*)
+                                                
 | all_e  : forall L {A:Type} (P:A -> form),
              deriv L (All P) -> forall t, deriv L (P t).
 Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
+
 (* ---------------------------------------------  *)
-(** * The derivable inference rules *)
+(*The derivable inference rules*)
 
 
-(* The Weakening lemma *)
+(*Weakening*)
 Lemma deriv_weakening_strong (L : form -> Prop) f {H:L ⊢ f}
 : forall L':_-> Prop, (forall f, L f -> L' f) -> L' ⊢ f.
 Proof.
@@ -106,6 +118,7 @@ Proof.
 Defined.
 
 
+(*Question 1.2.1*)
 (*A logically equivalent statement, but where the induction tactic does not 
 produce strong enough hypotheses for a direct proof*)
 Lemma deriv_weakening (L L' : form -> Prop) f :
@@ -116,7 +129,7 @@ Proof.
   intros; apply (deriv_weakening_strong L); assumption.
 Defined.
 
-(*The usual form of the weakening inference rule*)
+(*The usual form of the weakening rule*)
 Lemma wkn (L : form -> Prop) g f :
   L ⊢ f -> (L⋯g) ⊢ f.
 Proof.
@@ -171,7 +184,7 @@ Proof.
 Defined.
 
 
-
+(*Question 1.2.2*)
 Lemma deriv_substitution (L L' : form -> Prop) f :
   deriv L f ->
   (forall f, L f -> deriv L' f) ->
@@ -180,4 +193,6 @@ Proof.
   intros.
   apply (deriv_substitution_strong L); assumption.
 Defined.
+
+
 

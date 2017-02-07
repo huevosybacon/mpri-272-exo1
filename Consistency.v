@@ -64,7 +64,6 @@ Proof.
   + intros P. apply (nat_ind (fun x => intf (P x))).
 Qed.
 
-Definition Ø (f:form) := False.
 
 
 Lemma PA_consistency :

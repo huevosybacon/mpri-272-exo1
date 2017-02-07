@@ -1,13 +1,15 @@
 Require Import FormalSystem.
 
 (*---------------------------------*)
+(*The double negation translation*)
 
+(*Definition and notation for negation*)
 Definition nt : form -> form :=
   fun f => (Impl f Fa).
 Notation "! f" := (nt f) (at level 99).
 
-
-
+(*Question 2.1.1*)
+(*The translation function*)
 Fixpoint nnt (f : form) : form :=
   match f with
   | Tr => Tr
@@ -20,7 +22,43 @@ Fixpoint nnt (f : form) : form :=
   | Atom P => !! (Atom P) end.
 
 
-Lemma nnt_and {L} f g (H:L ⊢ (!!(And (nnt f) (nnt g)))) :
+(*Translating contexts*)
+Definition nnt_ctx L : form ->  Prop :=
+  fun f => exists f', L f' /\ f=nnt f'.
+
+
+(*Translation commutes with context extension*)
+Lemma nnt_ctx_ext L f g :
+  nnt_ctx (L⋯f) ⊢ g ->
+  nnt_ctx L ⋯ nnt f ⊢ g. 
+Proof.
+  intro H. apply (deriv_substitution (nnt_ctx (L⋯f))).
+  - exact H.
+  - intros f0 H0. destruct H0 as [f' [p q]].
+    case p.
+    + intro. apply ax. left. exists f'.
+      split; assumption.
+    + intro H0. apply ax. right. rewrite H0  in q.
+      exact q.
+Qed.  
+
+
+(*Translating the empty context*)
+Lemma nnt_ctx_Ø f :
+    (nnt_ctx Ø ⊢ f) -> Ø ⊢ f.
+Proof.
+  intro.
+  apply (deriv_substitution (nnt_ctx Ø)).
+  - assumption.
+  - intros f0 H0. destruct H0 as [g [H0 H0']].
+    apply ax. assumption.
+Qed. 
+
+(*----------------------------------*)
+(*Some simple helper lemmas*)
+
+(* ¬¬(A × B) → ¬¬A × ¬¬B*)
+Lemma nn_and {L} f g (H:L ⊢ (!!(And (nnt f) (nnt g)))) :
   (L ⊢ !! (nnt f)) * (L ⊢ !!(nnt g)).
 Proof.
   split; apply imp_i;
@@ -40,8 +78,8 @@ Proof.
 Qed.
 
 
-
-Lemma f_nnt {L} f (H:L ⊢ f) :
+(* ¬¬A → A*)
+Lemma f_nn {L} f (H:L ⊢ f) :
   L ⊢ !!f.
 Proof.
   apply imp_i, (imp_e _ f Fa).
@@ -50,30 +88,34 @@ Proof.
 Defined.
 
 
-
-Lemma nnt_nt {L} f (H:L ⊢ !!! f) :
+(* ¬¬¬A → ¬A*)
+Lemma nnn_n {L} f (H:L ⊢ !!! f) :
   L ⊢ !f.
 Proof.
   apply imp_i, (imp_e _ (!!f) Fa).
   - apply wkn, H. 
-  - apply f_nnt, ax. right. reflexivity.
+  - apply f_nn, ax. right. reflexivity.
 Defined.
 
 
+(*---------------------------------*)
+(*Soundness of the translation*)
 
+(*Question 2.2.1*)
+(*Double negation elim for translated formulae*)
 Lemma nnt_dne (f : form) :
   forall L, L ⊢ (!! (nnt f)) ->
             L ⊢ nnt f.
 Proof.
   induction f; intros; cbn; simpl in *;
-    try (apply nnt_nt; assumption).
+    try (apply nnn_n; assumption).
   - apply Tr_i.
   - apply (imp_e _ (! Fa) (Fa)). 
     + apply H.
     + apply imp_i, ax. right. reflexivity.
   - apply and_i.
-    + apply IHf1, (fst (nnt_and f1 f2 H)).
-    + apply IHf2, (snd (nnt_and f1 f2 H)).
+    + apply IHf1, (fst (nn_and f1 f2 H)).
+    + apply IHf2, (snd (nn_and f1 f2 H)).
   - apply imp_i, IHf2, imp_i, (imp_e _ (! Impl (nnt f1) (nnt f2))).
     + apply wkn, wkn, H.
     + apply imp_i, (imp_e _ (nnt f2)).
@@ -88,29 +130,13 @@ Proof.
 Qed.
 
 
-
-Definition nnt_ctx L : form ->  Prop :=
-  fun f => exists f', L f' /\ f=nnt f'.
-
-Lemma nnt_ctx_ext L f g :
-  nnt_ctx (L⋯f) ⊢ g ->
-  nnt_ctx L ⋯ nnt f ⊢ g. 
-Proof.
-  intro H. apply (deriv_substitution (nnt_ctx (L⋯f))).
-  - exact H.
-  - intros f0 H0. destruct H0 as [f' [p q]].
-    case p.
-    + intro. apply ax. left. exists f'.
-      split; assumption.
-    + intro H0. apply ax. right. rewrite H0  in q.
-      exact q.
-Qed.  
-
+(*Question 2.2.2*)
+(*Soundness*)
 Lemma nnt_soundness f L :
   L ⊢ f -> nnt_ctx L ⊢ nnt f.
 Proof.
   intro H. induction H; intros; simpl in *;
-            try apply f_nnt; try (econstructor; assumption).
+            try apply f_nn; try (econstructor; assumption).
   - apply ax. exists f. split. apply H. reflexivity.
   - apply imp_i. apply nnt_ctx_ext. assumption.
   - apply (imp_e _ (nnt f)); assumption.
