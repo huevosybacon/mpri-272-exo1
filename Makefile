@@ -10,7 +10,7 @@
 
 # Modules to be included in the main build:
 MODULES-MAIN := FormalSystem Translation Classical \
-EqualityArithmetic
+EqualityArithmetic Consistency
 MODULES-OTHER := 
 
 # Files that are largely broken for now and will not be built. \

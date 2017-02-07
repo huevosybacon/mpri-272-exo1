@@ -136,9 +136,19 @@ Proof.
         intros. left. left. left. assumption.
         intros. right. assumption.
   - apply (ex_i _ _ t). assumption.
-  - apply (ex_e _ (fun t => nnt (P t)) _).
-    + intro. apply nnt_ctx_ext, H0.
-    + apply (ex_i.
+  - apply nnt_dne, imp_i.
+    apply (imp_e _ (!(Ex (fun x : A => nnt (P x))))).
+    apply wkn; assumption.
+    apply imp_i.
+    apply (ex_e _ (fun x => nnt (P x))).
+    + intro t. apply (imp_e _ (nnt f)).
+      * apply ax; left; left; right; reflexivity.
+      * apply (deriv_weakening (nnt_ctx L⋯(nnt (P t)))).
+        apply nnt_ctx_ext. apply H0.
+        intros f0 H'. case H'.
+        intros. left. left. left. assumption.
+        intros. right. assumption.
+    + apply ax; right; reflexivity.
   - apply (all_e _ (fun t => nnt (P t))).
     assumption.
 Qed.
