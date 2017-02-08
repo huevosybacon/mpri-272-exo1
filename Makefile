@@ -23,14 +23,9 @@ VS      := $(MODULES-MAIN:%=%.v)
 VS-OTHER := $(MODULES-OTHER:%=%.v)
 VS-ALL := $(VS) $(VS-OTHER)
 
-# The HoTT coq binaries (“hoqc” etc.) are used by default.  These can
+# The coq binaries (“coqc” etc.) are used by default.  These can
 # be overridden by explicitly passing a different value of COQC, e.g.
-#     make COQC=coqc
-# COQDEP and COQDOC are set automatically based on COQC, but we are not
-# very clever about this, so if it doesn’t work, these can be explicitly
-# specified too.
-#
-# NOTE: currently, the “timed” options are hardwired to use “hoqc” etc.
+#     make COQC=hoqc
 
 COQC ?= coqc
 
@@ -44,12 +39,6 @@ COQDOC ?= coqdoc
 
 export COQC COQDEP COQDOC
 
-# Optionally: report compilation times
-ifeq ($(TIMED),yes)
-	COMPSHELL := scripts/report_time.sh
-else
-	COMPSHELL := $(SHELL)
-endif
 
 .PHONY: coq all install clean html
 
