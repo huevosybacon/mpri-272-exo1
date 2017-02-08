@@ -6,9 +6,16 @@ $ make
 in the project directory. Compilation checked with the version of Coq from Jan 2017.
 
 
+---MODULE DEPENDENCY---
+('-->' reads as 'necessary for')
+
+FormalSystem --> Translation --> Classical --> EqualityArithmetic --> Consistency
+
+
 ---INTERACTIVE MODE---
 Notations using Unicode symbols are used for readability.
 
+
+
 ---NOTES---
 Notations were typed using the Agda Emacs input mode.
-
