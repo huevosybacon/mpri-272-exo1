@@ -2,7 +2,10 @@ Require Import FormalSystem Translation Classical
         EqualityArithmetic.
 
 (* -------------------------- *)
+(*Consistency of PA via that of HA*)
 
+(*Question 5.1.1*)
+(*Interpretation of formulae as types of Coq (in the universe Prop)*)
 Fixpoint intf f : Prop :=
   match f with
   | Tr => True
@@ -16,6 +19,8 @@ Fixpoint intf f : Prop :=
   end.
 
 
+(*Question 5.2.1*)
+(*The soundness of the interpretation --- all derivable judgments L ⊢ f are valid, i.e., the type corresponding to the conclusion is inhabited when those corresponding to the premisses are inhabited.*)
 Lemma intf_soundness (L:_->Prop) f:
   (forall g, L g -> intf g) ->
   L ⊢ f -> intf f.
@@ -43,6 +48,8 @@ Proof.
 Qed.
 
 
+(*Question 5.3.1*)
+(*The interpretation of the theory E A holds for any type A*)
 Lemma intf_E A f:
   E A f ->
   intf f.
@@ -53,7 +60,7 @@ Proof.
   + intros. transitivity y; assumption.
 Qed.
 
-
+(*The same for the theory A*)
 Lemma intf_A f:
   A f ->
   intf f.
@@ -65,7 +72,21 @@ Proof.
 Qed.
 
 
+(*Question 5.4.1*)
+(*Consistency of HA*)
+Lemma HA_consistency :
+  ~ (Ø ⊢ₕ Fa).
+Proof.
+  intro.
+  apply (intf_soundness (Ø ⋃ HA) Fa).
+  - destruct 1.
+    + exfalso. apply H0.
+    + destruct H0. apply intf_A. assumption.
+      apply (intf_E nat). assumption.
+  - assumption.
+Qed.      
 
+(*Consistency of PA via that of HA*)
 Lemma PA_consistency :
   ~ (Ø ⊢ₚ Fa).
 Proof.
@@ -76,11 +97,8 @@ Proof.
     + intros. destruct H0.
       * destruct H0 as [g [H' H'']]. exfalso. apply H'.
       * apply ax; right; assumption.
-  - apply (intf_soundness (Ø ⋃ HA) Fa).
-    + destruct 1.
-      * exfalso. apply H1.
-      * destruct H1. apply intf_A. assumption.
-        apply (intf_E nat). assumption.
-    + assumption.
+  - apply HA_consistency. assumption.
 Qed.
-        
+
+
+(*Fin*)

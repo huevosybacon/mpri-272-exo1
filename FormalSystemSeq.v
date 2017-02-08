@@ -11,9 +11,6 @@ Inductive form :=
 | Ex : forall {A : Type}, (A -> form) -> form (*Existential quantifier*)
 | Atom : Prop -> form. (*Atomic propositions*)
 
-Notation "f ⇒ g" := (Impl f g)
-                     (at level 99, right associativity).
-
 
 (*---------------------------------*)
 (*Contexts --- are represented by terms L:form → Prop*)
@@ -28,6 +25,10 @@ Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
   fun L f g => (L g) \/ (g = f).
 Notation "L ⋯ f" := (L_ext L f) (at level 99).
 
+Lemma Lfext_f (L:_->Prop) f:
+  L f -> (L⋯f) = L.
+Proof.
+  
 
 (*One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---
 
@@ -43,36 +44,34 @@ Definition L_rm : (form -> Prop) -> form -> form -> Prop :=
 Inductive deriv : (form -> Prop) -> form -> Prop :=
 | ax     : forall (L:_ -> Prop) f,
              L f -> deriv L f
-| Tr_i   : forall L, deriv L Tr
-| Fa_e   : forall L f, deriv L Fa -> deriv L f
-| imp_i  : forall L f g,
-             deriv (L⋯f) g -> deriv L (Impl f g)
+| Tr_r   : forall L, deriv L Tr
+| Fa_l   : forall (L:_->Prop) f, L Fa -> deriv L f
+| imp_r : forall L f g,
+    deriv (L⋯f) g -> deriv L (Impl f g)
 | imp_e  : forall L f g,
              deriv L (Impl f g) -> deriv L f -> deriv L g
-| and_i  : forall L f g,
-             deriv L f -> deriv L g -> deriv L (And f g)
-| and_e1 : forall L f g,
-             deriv L (And f g) -> deriv L f
-| and_e2 : forall L f g,
-             deriv L (And f g) -> deriv L g
-| or_i1  : forall L f g,
-             deriv L f -> deriv L (Or f g)
-| or_i2  : forall L f g,
-             deriv L g -> deriv L (Or f g)
-| or_e   : forall L f g h,
-             deriv L (Or f g) -> deriv (L⋯f) h -> deriv (L⋯g) h -> deriv L h
-| ex_i   : forall L {A:Type} (P:A -> form) t,
-             deriv L (P t) -> deriv L (Ex P)
-| ex_e   : forall L {A:Type} (P:A -> form) f,
-             (forall t, deriv (L⋯P t) f) -> (deriv L (Ex P)) -> deriv L f
+| and_r  : forall L f g,
+    deriv L f -> deriv L g -> deriv L (And f g)
+| and_l : forall L f g h,
+    deriv (L⋯f⋯g) h -> deriv (L⋯And f g) h
+| or_r1  : forall L f g,
+    deriv L f -> deriv L (Or f g)
+| or_r2  : forall L f g,
+    deriv L g -> deriv L (Or f g)
+| or_l   : forall L f g h,
+    deriv (L⋯f) h -> deriv (L⋯g) h -> deriv (L⋯(Or f g)) h
+| ex_r   : forall L {A:Type} (P:A -> form) t,
+    deriv L (P t) -> deriv L (Ex P)
+| ex_l   : forall L {A:Type} (P:A -> form) f,
+    (forall t, deriv (L⋯P t) f) -> deriv (L⋯(Ex P)) f
 (*Note that the side condition that the rule above requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — in the Coq lambda-term — above t, thus t cannot be free in them*)
 
-| all_i  : forall L {A:Type} (P:A -> form),
-             (forall t, deriv L (P t)) -> deriv L (All P)
+| all_r  : forall L {A:Type} (P:A -> form),
+    (forall t, deriv L (P t)) -> deriv L (All P)
 (*same remark for the side condition in the rule above*)
                                                 
-| all_e  : forall L {A:Type} (P:A -> form),
-             deriv L (All P) -> forall t, deriv L (P t).
+| all_l  : forall L {A:Type} (P:A -> form) f t,
+    deriv (L⋯(P t)) f -> deriv (L⋯(All P)) f.
 Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
@@ -87,18 +86,18 @@ Lemma deriv_weakening_strong (L : form -> Prop) f {H:L ⊢ f}
 Proof.
   induction H; intros.
   - apply ax, H0, H.
-  - apply Tr_i.
-  - apply Fa_e, IHderiv, H0. 
-  - apply imp_i, IHderiv; intros.
+  - apply Tr_r.
+  - apply Fa_l, H0. assumption.
+  - apply imp_r, IHderiv; intros.
     case H1.
     + intro; left; apply H0, H2.
     + intro; right; assumption.
   - apply (imp_e _ f g). apply IHderiv1, H1.
     apply IHderiv2, H1.
-  - apply and_i.
+  - apply and_r.
     + apply IHderiv1, H1.
     + apply IHderiv2, H1.
-  - apply (and_e1 _ _ g), IHderiv, H0.
+  - apply and_l. , IHderiv, H0.
   - apply (and_e2 _ f _), IHderiv, H0.
   - apply or_i1, IHderiv, H0.
   - apply or_i2, IHderiv, H0.
@@ -197,6 +196,5 @@ Proof.
   apply (deriv_substitution_strong L); assumption.
 Defined.
 
-(*Fin*)
 
 

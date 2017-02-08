@@ -97,6 +97,16 @@ Proof.
   - apply f_nn, ax. right. reflexivity.
 Defined.
 
+Lemma nnt_helper L f :
+  L⋯(!f) ⊢ f ->
+  L ⊢ !!f.
+Proof.
+  intro. apply imp_i, (imp_e _ f).
+  - apply ax. right. reflexivity.
+  - assumption.
+Defined.
+
+
 
 (*---------------------------------*)
 (*Soundness of the translation*)
@@ -180,3 +190,4 @@ Proof.
 Qed.
 
 
+(*Fin*)

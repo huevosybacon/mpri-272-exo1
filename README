@@ -1,0 +1,14 @@
+---COMPILATION---
+To compile this Coq project, run
+
+$ make
+
+in this directory. Compilation checked with the version of Coq from Jan 2017.
+
+
+---INTERACTIVE MODE---
+Notations using Unicode symbols are used for readability.
+
+---NOTES---
+Notations were typed using the Agda Emacs input mode.
+
