@@ -3,7 +3,7 @@ To compile this Coq project, run
 
 $ make
 
-in this directory. Compilation checked with the version of Coq from Jan 2017.
+in the project directory. Compilation checked with the version of Coq from Jan 2017.
 
 
 ---INTERACTIVE MODE---
