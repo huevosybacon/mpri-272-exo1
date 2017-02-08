@@ -1,6 +1,7 @@
 Set Printing Universes.
+Set Universe Polymorphism.
 
-(*The inductive type of formulae. Note that if All or Ex quantifies over a type in a universe, then the resulting form is in a strictly higher universe. In particular, neither can quantify over *all* terms of type form. Note also that the definition is universe-polymorphic, thus the All and Ex constructors of a form at a higher level can quantify over a form at a lower level*)
+(*The inductive type of formulae. Note that if All or Ex quantifies over a type in a universe, then the resulting form is in a strictly higher universe. Note also that the definition is universe-polymorphic, thus the All and Ex constructors of a form at a higher level can quantify over a form at a lower level*)
 Inductive form :=
 | Tr : form (*true/⊤*)
 | Fa : form (*absurd*)
@@ -29,10 +30,12 @@ Definition L_ext : (form -> Prop) -> form -> form -> Prop :=
 Notation "L ⋯ f" := (L_ext L f) (at level 99).
 
 
-(*One might be tempted to make the following definition of "removing a hypothesis from a context", i.e. of discarding *all* occurrences of the formula from the context. This is unwise for the usual reasons ---
+(*One might be tempted instead to make the following definition of "removing a hypothesis from a context". However, since contexts are not interpreted as lists but as (sub)sets/classes of formulae specified/separated by a predicate, and not as lists or multisets, the only sense to removing a formulae from a context is that of discarding *all* occurrences of the formula from the context. This is unwise --- for instance, it seems to me as though defining inference rules so that weakening is admissible becomes tricky, especially in the case of the introduction of the implication.
 
 Definition L_rm : (form -> Prop) -> form -> form -> Prop :=
-  fun L A B => and (L B) (~ B = A).*)
+  fun L A B => (L B) /\ (~ B = A).*)
+
+
 
 
 (*--------------------------------*)
@@ -65,7 +68,7 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
              deriv L (P t) -> deriv L (Ex P)
 | ex_e   : forall L {A:Type} (P:A -> form) f,
              (forall t, deriv (L⋯P t) f) -> (deriv L (Ex P)) -> deriv L f
-(*Note the side condition that the standard formulaion of the rule above requires, namely that no instantiation of L and f contain t (This is usually stated by explicitly instantiating L and f with a context(-variable) and a formula(-variable), and t with a term-variable x, and requiring that x appear free neither in the instantiation of L nor in that of f). This is guaranteed by the fact that L and f are bound — in the Coq lambda-term/the meta-term — above the binder for t, thus t cannot be captured by any substitution for L or f. Note also that this meta-binding inside the scope of L and f is *precisely* what we mean when we say that the term-variable in the auxiliary premiss of the ∃-elim rule is free neither in the rest of the context nor in the conclusion.*)
+(*Note the side condition that the standard formulaion of the rule above requires, namely that neither L nor f contain t as a free variable. This is guaranteed by explicitly binding L and f — the forall in the Coq lambda-term/the meta-term — above the binder for t, thus t is neither free in nor can be captured by any substitution for L or f. Note also that this meta-binding inside the scope of L and f is *precisely* what we mean when we say that the term-variable in the auxiliary premiss of the ∃-elim rule is free neither in the rest of the context nor in the conclusion.*)
 
 | all_i  : forall L {A:Type} (P:A -> form),
              (forall t, deriv L (P t)) -> deriv L (All P)
