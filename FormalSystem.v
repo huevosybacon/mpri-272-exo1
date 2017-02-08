@@ -65,7 +65,7 @@ Inductive deriv : (form -> Prop) -> form -> Prop :=
              deriv L (P t) -> deriv L (Ex P)
 | ex_e   : forall L {A:Type} (P:A -> form) f,
              (forall t, deriv (L⋯P t) f) -> (deriv L (Ex P)) -> deriv L f
-(*Note that the side condition that the rule above requires, namely that t be free neither in L nor in f is guaranteed by the fact that L and f are bound — in the Coq lambda-term — above t, thus t cannot be free in them*)
+(*Note the side condition that the standard formulaion of the rule above requires, namely that no instantiation of L and f contain t (This is usually stated by explicitly instantiating L and f with a context(-variable) and a formula(-variable), and t with a term-variable x, and requiring that x appear free neither in the instantiation of L nor in that of f). This is guaranteed by the fact that L and f are bound — in the Coq lambda-term/the meta-term — above the binder for t, thus t cannot be captured by any substitution for L or f. Note also that this meta-binding inside the scope of L and f is *precisely* what we mean when we say that the term-variable in the auxiliary premiss of the ∃-elim rule is free neither in the rest of the context nor in the conclusion.*)
 
 | all_i  : forall L {A:Type} (P:A -> form),
              (forall t, deriv L (P t)) -> deriv L (All P)
@@ -78,20 +78,22 @@ Notation "L ⊢ f" := (deriv L f) (at level 99).
 
 
 (* ---------------------------------------------  *)
-(*The derivable inference rules*)
+(*The admissible inference rules*)
 
 
 (*Weakening*)
-Lemma deriv_weakening_strong (L : form -> Prop) f {H:L ⊢ f}
-: forall L':_-> Prop, (forall f, L f -> L' f) -> L' ⊢ f.
+Lemma deriv_weakening_strong (L : form -> Prop) f {H:L ⊢ f} :
+  forall L':_-> Prop,
+    (forall f, L f -> L' f) ->
+    L' ⊢ f.
 Proof.
   induction H; intros.
   - apply ax, H0, H.
   - apply Tr_i.
   - apply Fa_e, IHderiv, H0. 
-  - apply imp_i, IHderiv; intros.
+  - apply imp_i, IHderiv. intros.
     case H1.
-    + intro; left; apply H0, H2.
+    + intro; left; apply H0. assumption.
     + intro; right; assumption.
   - apply (imp_e _ f g). apply IHderiv1, H1.
     apply IHderiv2, H1.
@@ -104,7 +106,7 @@ Proof.
   - apply or_i2, IHderiv, H0.
   - apply (or_e _ f g).
     + apply IHderiv1, H2.
-    + apply IHderiv2; intros; case H3.
+    + apply IHderiv2. intros. case H3.
       * intro; left; apply H2; assumption.
       * intro; right; assumption.
     + apply IHderiv3; intros; case H3.
@@ -123,7 +125,7 @@ Defined.
 
 (*Question 1.2.1*)
 (*A logically equivalent statement, but where the induction tactic does not 
-produce strong enough hypotheses for a direct proof*)
+produce strong enough hypotheses for the proof to go through*)
 Lemma deriv_weakening (L L' : form -> Prop) f :
   L ⊢ f ->
   (forall f, L f -> L' f) ->
@@ -144,7 +146,9 @@ Defined.
 
 
 
-(*Substitution*)
+(*Substitution/Cut/Context morphisms*)
+
+(*A statement phrased in a way to let Coq's induction tactic go through*)
 Lemma deriv_substitution_strong (L : form -> Prop) f :
   deriv L f ->
   forall L', (forall f, L f -> deriv L' f) ->
@@ -188,6 +192,7 @@ Defined.
 
 
 (*Question 1.2.2*)
+(*A statement equivalent to the one above*)
 Lemma deriv_substitution (L L' : form -> Prop) f :
   deriv L f ->
   (forall f, L f -> deriv L' f) ->
